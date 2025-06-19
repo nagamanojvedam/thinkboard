@@ -1,25 +1,29 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
+import path from "path";
 
 import connectDB from "./config/db.js";
 import notesRouter from "./routes/notesRoutes.js";
 
 dotenv.config();
-
 const app = express();
+const __dirname = path.resolve();
+console.log(__dirname);
 
-app.use(cors({ origin: "http://localhost:5174" }));
+if (process.env.NODE_ENV !== "production") {
+  app.use(cors({ origin: "http://localhost:5173" }));
+}
 app.use(express.json());
 
 app.use("/api/v1/notes", notesRouter);
 
-app.get("/test", (req, res) => {
-  return res.status(200).json({
-    message: "A think board test",
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  app.get(/.*?/, (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
   });
-});
+}
 
 const startServer = () =>
   app.listen(process.env.PORT, () => {
