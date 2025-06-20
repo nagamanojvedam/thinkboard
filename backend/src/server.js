@@ -3,18 +3,19 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 
-import connectDB from "./config/db.js";
+import { connectDB } from "./config/db.js";
 import notesRouter from "./routes/notesRoutes.js";
+import rateLimiter from "./middleware/rateLimiter.js";
 
 dotenv.config();
 const app = express();
 const __dirname = path.resolve();
-console.log(__dirname);
 
 if (process.env.NODE_ENV !== "production") {
   app.use(cors({ origin: "http://localhost:5173" }));
 }
 app.use(express.json());
+app.use(rateLimiter);
 
 app.use("/api/v1/notes", notesRouter);
 
@@ -25,9 +26,8 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-const startServer = () =>
+connectDB().then(() =>
   app.listen(process.env.PORT, () => {
     console.log(`server running on port no ${process.env.PORT}`);
-  });
-
-connectDB(startServer);
+  })
+);
